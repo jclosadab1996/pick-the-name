@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pick The Name - Inicio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles/common.css" />
+    <link rel="stylesheet" href="../styles/nav.css" />
+    <link rel="stylesheet" href="../styles/home.css" />
+    <link rel="stylesheet" href="../styles/name-details.css" />
+  </head>
+  <body>
+    <nav class="nav-container">
+      <div class="nav-content">
+        <a href="home.html" class="nav-logo">Pick The Name</a>
+        <button
+          class="nav-toggle"
+          onclick="this.parentElement.querySelector('.nav-links').classList.toggle('active')"
+        >
+          ☰
+        </button>
+        <ul class="nav-links">
+          <li><a href="home.html">Inicio</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="login.html">Iniciar Sesión</a></li>
+          <li><a href="register.html">Registro</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div id="app">
+      <div id="home-content">
+        <div class="hero">
+          <div class="hero-image">
+            <img src="../assets/baby.png" alt="Bebé Dormido" />
+          </div>
+          <div class="hero-text">
+            <h1>Buscador de nombres para bebés</h1>
+            <p>
+              En Pick The Name sabemos que no es tarea fácil elegir el nombre
+              perfecto para tu bebé y, para ayudarte, hemos creado el Buscador
+              de nombres para bebés. ¡Encuentra el tuyo!
+            </p>
+          </div>
+        </div>
+
+        <!-- Espacio publicitario -->
+        <div class="ad-space">
+          <div class="ad-content">
+            <h3>¿Necesitas ayuda para elegir?</h3>
+            <p>
+              Descarga nuestra guía gratuita con consejos para elegir el nombre
+              perfecto para tu bebé
+            </p>
+            <button class="ad-button">Descargar Guía</button>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="top-names">
+            <h2>Top 10 nombres más utilizados</h2>
+            <ul id="top-names-list"></ul>
+          </div>
+          <div class="name-filter">
+            <h2>Filtrar Nombres</h2>
+            <select id="gender"></select>
+            <select id="theme"></select>
+            <select id="origin"></select>
+            <select id="length"></select>
+            <select id="first-letter"></select>
+            <button id="show-more">Ver más nombres de bebés</button>
+          </div>
+        </div>
+
+        <!-- Modal para detalles del nombre -->
+        <div id="name-details-modal" class="modal">
+          <div class="modal-content name-details-container">
+            <span class="close-modal">&times;</span>
+            <header class="name-header">
+              <h1 id="name-title"></h1>
+              <div class="name-quick-info">
+                <span id="name-origin"></span>
+                <span id="name-meaning"></span>
+              </div>
+            </header>
+
+            <div class="name-content">
+              <section class="name-description">
+                <h2>Descripción</h2>
+                <p id="name-short-description"></p>
+                <div class="name-detailed">
+                  <h3>Descripción Detallada</h3>
+                  <p id="name-detailed-description"></p>
+                </div>
+              </section>
+
+              <section class="name-history">
+                <h2>Historia</h2>
+                <p id="name-history"></p>
+              </section>
+
+              <div class="name-info-grid">
+                <section class="name-variants">
+                  <h2>Variantes</h2>
+                  <ul id="name-variants"></ul>
+                </section>
+
+                <section class="name-famous">
+                  <h2>Personas Famosas</h2>
+                  <ul id="name-famous"></ul>
+                </section>
+
+                <section class="name-popularity">
+                  <h2>Popularidad</h2>
+                  <div id="name-popularity"></div>
+                  <div id="name-trend"></div>
+                </section>
+
+                <section class="name-additional">
+                  <h2>Información Adicional</h2>
+                  <div class="name-popular-in">
+                    <h3>Popular en</h3>
+                    <p id="name-popular-in"></p>
+                  </div>
+                  <div class="name-day">
+                    <h3>Día del Santo</h3>
+                    <p id="name-day"></p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../scripts/name-details.js"></script>
+    <script src="../scripts/home.js"></script>
+  </body>
+</html>

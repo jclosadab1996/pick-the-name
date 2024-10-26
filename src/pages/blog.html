@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pick The Name - Blog</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles/common.css" />
+    <link rel="stylesheet" href="../styles/nav.css" />
+    <link rel="stylesheet" href="../styles/blog.css" />
+  </head>
+  <body>
+    <nav class="nav-container">
+      <div class="nav-content">
+        <a href="home.html" class="nav-logo">Pick The Name</a>
+        <button
+          class="nav-toggle"
+          onclick="this.parentElement.querySelector('.nav-links').classList.toggle('active')"
+        >
+          ☰
+        </button>
+        <ul class="nav-links">
+          <li><a href="home.html">Inicio</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="login.html">Iniciar Sesión</a></li>
+          <li><a href="register.html">Registro</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div id="app">
+      <div id="blog-content">
+        <h1>Blog de Nombres para Bebés</h1>
+        <div id="blog-posts"></div>
+        <div id="new-post-form">
+          <h2>Crear Nuevo Post</h2>
+          <form id="new-post">
+            <input
+              type="text"
+              id="post-title"
+              placeholder="Título del post"
+              required
+            />
+            <textarea
+              id="post-content"
+              placeholder="Contenido del post"
+              required
+            ></textarea>
+            <button type="submit">Publicar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="../scripts/blog.js"></script>
+  </body>
+</html>
