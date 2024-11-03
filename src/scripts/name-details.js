@@ -1,6 +1,7 @@
 // Datos de ejemplo para los detalles del nombre
 const nameDetails = {
   name: "Sofía",
+  gener: "Femenino",
   meaning: "Sabiduría",
   origin: "Griego",
   popularIn: "Colombia, México, Argentina",

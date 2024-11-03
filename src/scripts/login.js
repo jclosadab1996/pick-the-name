@@ -2,10 +2,28 @@
 const loginForm = document.getElementById("login-form");
 const emailInput = document.getElementById("login-email");
 const passwordInput = document.getElementById("login-password");
+const loginError = document.getElementById("login-error");
+
+// Demo user credentials
+const DEMO_USER = {
+  email: "demo@example.com",
+  password: "Demo123",
+  id: "demo123",
+  name: "Usuario Demo",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo",
+  savedNames: [],
+  preferences: {
+    theme: "light",
+    notifications: true,
+  },
+  activities: [],
+  blogPosts: [],
+};
 
 // Initialize page
 function initializePage() {
   setupEventListeners();
+  checkLoginStatus();
 }
 
 // Setup event listeners
@@ -13,58 +31,43 @@ function setupEventListeners() {
   loginForm.addEventListener("submit", handleLogin);
 }
 
+// Check if user is already logged in
+function checkLoginStatus() {
+  const user = localStorage.getItem("user");
+  if (user) {
+    window.location.href = "../pages/profile.html";
+  }
+}
+
 // Handle login form submission
 async function handleLogin(event) {
   event.preventDefault();
+  loginError.textContent = "";
 
   const email = emailInput.value;
   const password = passwordInput.value;
 
   try {
-    // Here you would typically make an API call to authenticate
-    const loginData = {
-      email,
-      password,
-    };
+    // Check if credentials match demo user
+    if (email === DEMO_USER.email && password === DEMO_USER.password) {
+      // Store user data in localStorage
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...DEMO_USER,
+          lastLogin: new Date().toISOString(),
+        })
+      );
 
-    console.log("Attempting login with:", loginData);
-
-    // Simulate API call
-    await simulateApiCall();
-
-    // On successful login
-    handleLoginSuccess();
+      // Redirect to profile page
+      window.location.href = "../pages/profile.html";
+    } else {
+      throw new Error("Credenciales inválidas");
+    }
   } catch (error) {
-    handleLoginError(error);
+    loginError.textContent = error.message;
+    passwordInput.value = "";
   }
-}
-
-// Handle successful login
-function handleLoginSuccess() {
-  // Here you would typically:
-  // 1. Store the authentication token
-  // 2. Update the UI
-  // 3. Redirect to the dashboard or home page
-  console.log("Login successful");
-
-  // Clear the form
-  loginForm.reset();
-
-  // Redirect to home page
-  window.location.href = "/";
-}
-
-// Handle login error
-function handleLoginError(error) {
-  console.error("Login failed:", error);
-  // Here you would typically show an error message to the user
-}
-
-// Simulate API call (remove in production)
-function simulateApiCall() {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
 }
 
 // Initialize the page when DOM is loaded

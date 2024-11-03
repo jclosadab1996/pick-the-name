@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pick The Name - Perfil</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles/common.css" />
+    <link rel="stylesheet" href="../styles/profile.css" />
+  </head>
+  <body>
+    <div id="app">
+      <nav class="profile-nav">
+        <div class="nav-content">
+          <div class="nav-brand">Pick The Name</div>
+          <div class="nav-links">
+            <button id="names-tab" class="nav-link active">Nombres</button>
+            <button id="saved-tab" class="nav-link">Guardados</button>
+            <button id="blog-tab" class="nav-link">Blog</button>
+            <button id="settings-tab" class="nav-link">Ajustes</button>
+          </div>
+          <div class="nav-user">
+            <img id="user-avatar" src="" alt="Avatar" />
+            <span id="user-name"></span>
+            <button id="logout-btn">Salir</button>
+          </div>
+        </div>
+      </nav>
+
+      <main class="profile-main">
+        <!-- Names Section -->
+        <section id="names-section" class="profile-section active">
+          <div class="search-filters">
+            <div class="filters-grid">
+              <select id="gender-filter">
+                <option value="all">Todos los géneros</option>
+                <option value="male">Masculino</option>
+                <option value="female">Femenino</option>
+              </select>
+              <select id="origin-filter"></select>
+              <select id="length-filter">
+                <option value="all">Cualquier longitud</option>
+                <option value="short">Corto (1-4)</option>
+                <option value="medium">Medio (5-7)</option>
+                <option value="long">Largo (8+)</option>
+              </select>
+              <select id="letter-filter"></select>
+            </div>
+          </div>
+          <div class="names-grid" id="filtered-names"></div>
+        </section>
+
+        <!-- Saved Names Section -->
+        <section id="saved-section" class="profile-section">
+          <h2>Nombres Guardados</h2>
+          <div class="names-grid" id="saved-names"></div>
+        </section>
+
+        <!-- Blog Section -->
+        <section id="blog-section" class="profile-section">
+          <div class="blog-header">
+            <h2>Blog de Nombres</h2>
+            <button id="new-post-btn">Nuevo Post</button>
+          </div>
+          <div id="blog-posts"></div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section" class="profile-section">
+          <h2>Ajustes de Perfil</h2>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label for="theme-toggle">Tema Oscuro</label>
+              <input type="checkbox" id="theme-toggle" />
+            </div>
+            <div class="setting-item">
+              <label for="notifications-toggle">Notificaciones</label>
+              <input type="checkbox" id="notifications-toggle" />
+            </div>
+          </div>
+          <div class="activity-log">
+            <h3>Actividad Reciente</h3>
+            <div id="activity-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Name Details Modal Template -->
+    <template id="name-modal-template">
+      <div class="modal">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <h2 class="name-title"></h2>
+          <div class="name-details"></div>
+          <button class="save-name-btn"></button>
+        </div>
+      </div>
+    </template>
+
+    <!-- New Blog Post Modal Template -->
+    <template id="blog-modal-template">
+      <div class="modal">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <h2>Nuevo Post</h2>
+          <form id="new-blog-post">
+            <input type="text" placeholder="Título" required />
+            <textarea placeholder="Contenido" required></textarea>
+            <button type="submit">Publicar</button>
+          </form>
+        </div>
+      </div>
+    </template>
+
+    <script src="../scripts/profile.js"></script>
+  </body>
+</html>
