@@ -1,3 +1,5 @@
+const Registro = require("../../models/Registro");
+
 // DOM Elements
 const registerForm = document.getElementById("register-form");
 const nameInput = document.getElementById("register-name");
@@ -25,9 +27,11 @@ function validatePassword() {
   const confirmPassword = confirmPasswordInput.value;
 
   if (password !== confirmPassword) {
-    confirmPasswordInput.setCustomValidity("Las contraseñas no coinciden");
+    return false;
+    // confirmPasswordInput.setCustomValidity("Las contraseñas no coinciden");
   } else {
-    confirmPasswordInput.setCustomValidity("");
+    return true;
+    // confirmPasswordInput.setCustomValidity("");
   }
 }
 
@@ -99,3 +103,26 @@ function isPasswordValid(password) {
 
 // Initialize the page when DOM is loaded
 document.addEventListener("DOMContentLoaded", initializePage);
+
+//Crear Registro
+
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  if(validatePassword){
+    e.preventDefault();
+    const name = document.getElementById('registroName').value;
+    const email = document.getElementById('registroEmail').value;
+    const password = document.getElementById('requierePassword').value;
+  
+    await fetch('api/registro', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name, email, password})
+      });
+  
+      registerForm.reset();
+      e.target.reset();
+
+  }else{
+    alert ("Las contraseñas no coinciden");
+  }
+  });
