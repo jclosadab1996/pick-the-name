@@ -1,5 +1,3 @@
-const Registro = require("../../models/Registro");
-
 // DOM Elements
 const registerForm = document.getElementById("register-form");
 const nameInput = document.getElementById("register-name");
@@ -17,29 +15,21 @@ function initializePage() {
 // Setup event listeners
 function setupEventListeners() {
   registerForm.addEventListener("submit", handleRegister);
-  passwordInput.addEventListener("input", validatePassword);
-  confirmPasswordInput.addEventListener("input", validatePassword);
 }
 
 // Validate password
 function validatePassword() {
   const password = passwordInput.value;
   const confirmPassword = confirmPasswordInput.value;
-
-  if (password !== confirmPassword) {
-    return false;
-    // confirmPasswordInput.setCustomValidity("Las contraseñas no coinciden");
-  } else {
-    return true;
-    // confirmPasswordInput.setCustomValidity("");
-  }
+  return password === confirmPassword;
 }
 
 // Handle registration form submission
 async function handleRegister(event) {
   event.preventDefault();
 
-  if (passwordInput.value !== confirmPasswordInput.value) {
+  if (!validatePassword()) {
+    alert("Las contraseñas no coinciden");
     return;
   }
 
@@ -50,79 +40,28 @@ async function handleRegister(event) {
   };
 
   try {
-    // Here you would typically make an API call to register the user
-    console.log("Attempting registration with:", userData);
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
 
-    // Simulate API call
-    await simulateApiCall();
+    const data = await response.json();
 
-    // On successful registration
-    handleRegistrationSuccess();
+    if (!response.ok) {
+      throw new Error(data.message || "Error registering user");
+    }
+
+    // Store token and user data
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    // Redirect to profile page
+    window.location.href = "../pages/profile.html";
   } catch (error) {
-    handleRegistrationError(error);
+    alert(error.message);
   }
-}
-
-// Handle successful registration
-function handleRegistrationSuccess() {
-  // Here you would typically:
-  // 1. Show a success message
-  // 2. Redirect to login page or automatically log in the user
-  console.log("Registration successful");
-
-  // Clear the form
-  registerForm.reset();
-
-  // Redirect to login page
-  window.location.href = "/login.html";
-}
-
-// Handle registration error
-function handleRegistrationError(error) {
-  console.error("Registration failed:", error);
-  // Here you would typically show an error message to the user
-}
-
-// Simulate API call (remove in production)
-function simulateApiCall() {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  });
-}
-
-// Password validation
-function isPasswordValid(password) {
-  // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-  const minLength = password.length >= 8;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-
-  return minLength && hasUpperCase && hasLowerCase && hasNumber;
 }
 
 // Initialize the page when DOM is loaded
 document.addEventListener("DOMContentLoaded", initializePage);
-
-//Crear Registro
-
-document.getElementById('register-form').addEventListener('submit', async (e) => {
-  if(validatePassword){
-    e.preventDefault();
-    const name = document.getElementById('registroName').value;
-    const email = document.getElementById('registroEmail').value;
-    const password = document.getElementById('requierePassword').value;
-  
-    await fetch('api/registro', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ name, email, password})
-      });
-  
-      registerForm.reset();
-      e.target.reset();
-
-  }else{
-    alert ("Las contraseñas no coinciden");
-  }
-  });

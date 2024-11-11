@@ -4,21 +4,11 @@ const userName = document.getElementById("user-name");
 const logoutBtn = document.getElementById("logout-btn");
 const navLinks = document.querySelectorAll(".nav-link");
 const sections = document.querySelectorAll(".profile-section");
-
-// Filters
+const filteredNamesGrid = document.getElementById("filtered-names");
 const genderFilter = document.getElementById("gender-filter");
 const originFilter = document.getElementById("origin-filter");
 const lengthFilter = document.getElementById("length-filter");
 const letterFilter = document.getElementById("letter-filter");
-
-// Grids
-const filteredNamesGrid = document.getElementById("filtered-names");
-const savedNamesGrid = document.getElementById("saved-names");
-const blogPosts = document.getElementById("blog-posts");
-
-// Templates
-const nameModalTemplate = document.getElementById("name-modal-template");
-const blogModalTemplate = document.getElementById("blog-modal-template");
 
 let namesData = {
   male: [],
@@ -28,20 +18,25 @@ let namesData = {
 // Initialize page
 async function initializePage() {
   checkAuthentication();
-  await loadNamesData();
   setupUser();
-  setupFilters();
   setupEventListeners();
-  loadSavedNames();
-  loadBlogPosts();
+  await Promise.all([loadUserData(), loadNamesData()]);
+  setupFilters();
   filterNames();
 }
 
 // Check authentication
 function checkAuthentication() {
-  if (!localStorage.getItem("user")) {
+  if (!localStorage.getItem("token")) {
     window.location.href = "../pages/login.html";
   }
+}
+
+// Setup user
+function setupUser() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  userName.textContent = user.name;
+  userAvatar.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
 }
 
 // Load names data
@@ -58,20 +53,9 @@ async function loadNamesData() {
   }
 }
 
-// Setup user
-function setupUser() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  userAvatar.src = user.avatar;
-  userName.textContent = user.name;
-  document.body.classList.toggle(
-    "dark-theme",
-    user.preferences?.theme === "dark"
-  );
-}
-
 // Setup filters
 function setupFilters() {
-  // Setup origin filter
+  // Origin filter
   const origins = [
     ...new Set([
       ...namesData.male.map((n) => n.origin),
@@ -80,52 +64,20 @@ function setupFilters() {
   ].sort();
 
   originFilter.innerHTML = `
-        <option value="all">Todos los orígenes</option>
-        ${origins
-          .map((origin) => `<option value="${origin}">${origin}</option>`)
-          .join("")}
-    `;
+    <option value="all">Todos los orígenes</option>
+    ${origins
+      .map((origin) => `<option value="${origin}">${origin}</option>`)
+      .join("")}
+  `;
 
-  // Setup letter filter
+  // Letter filter
   const letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
   letterFilter.innerHTML = `
-        <option value="all">Todas las letras</option>
-        ${letters
-          .map((letter) => `<option value="${letter}">${letter}</option>`)
-          .join("")}
-    `;
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  // Navigation
-  navLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-      navLinks.forEach((l) => l.classList.remove("active"));
-      link.classList.add("active");
-
-      const targetSection = link.id.replace("-tab", "-section");
-      sections.forEach((section) => {
-        section.classList.toggle("active", section.id === targetSection);
-      });
-    });
-  });
-
-  // Filters
-  [genderFilter, originFilter, lengthFilter, letterFilter].forEach((filter) => {
-    filter.addEventListener("change", filterNames);
-  });
-
-  // Logout
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("user");
-    window.location.href = "../pages/login.html";
-  });
-
-  // New blog post
-  document
-    .getElementById("new-post-btn")
-    ?.addEventListener("click", showNewPostModal);
+    <option value="all">Todas las letras</option>
+    ${letters
+      .map((letter) => `<option value="${letter}">${letter}</option>`)
+      .join("")}
+  `;
 }
 
 // Filter names
@@ -176,22 +128,31 @@ function displayFilteredNames(names) {
   filteredNamesGrid.innerHTML = names
     .map(
       (name) => `
-        <div class="name-card" data-name="${name.name}">
-            <h3>${name.name}</h3>
-            <p>${name.meaning}</p>
-            <p class="origin">${name.origin}</p>
-            <div class="popularity">
-                <span class="popularity-icon">⭐</span>
-                <span>${name.popularity?.global || "Popular"}</span>
-            </div>
-        </div>
-    `
+    <div class="name-card" data-name="${name.name}">
+      <h3>${name.name}</h3>
+      <p class="meaning">${name.meaning}</p>
+      <p class="origin">${name.origin}</p>
+      <div class="popularity">
+        <span class="popularity-icon">⭐</span>
+        <span>${name.popularity?.global || "Popular"}</span>
+      </div>
+      <button class="save-name-btn" onclick="saveName(${JSON.stringify(
+        name
+      ).replace(/"/g, "&quot;")})">
+        Guardar nombre
+      </button>
+    </div>
+  `
     )
     .join("");
 
-  // Add click events
+  // Add click events for name details
   document.querySelectorAll(".name-card").forEach((card) => {
-    card.addEventListener("click", () => showNameDetails(card.dataset.name));
+    card.addEventListener("click", (e) => {
+      if (!e.target.classList.contains("save-name-btn")) {
+        showNameDetails(card.dataset.name);
+      }
+    });
   });
 }
 
@@ -202,183 +163,216 @@ function showNameDetails(name) {
   );
   if (!nameData) return;
 
-  const modal = nameModalTemplate.content.cloneNode(true);
-  const modalElement = modal.querySelector(".modal");
-  const nameTitle = modal.querySelector(".name-title");
-  const nameDetails = modal.querySelector(".name-details");
-  const saveButton = modal.querySelector(".save-name-btn");
-
-  nameTitle.textContent = nameData.name;
-  nameDetails.innerHTML = `
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>${nameData.name}</h2>
+      <div class="name-details">
         <p><strong>Significado:</strong> ${nameData.meaning}</p>
         <p><strong>Origen:</strong> ${nameData.origin}</p>
         <p><strong>Popular en:</strong> ${nameData.popularIn}</p>
         <p><strong>Descripción:</strong> ${nameData.description}</p>
         <div class="detailed-info">
-            <h3>Historia</h3>
-            <p>${nameData.history}</p>
-            <h3>Variantes</h3>
-            <p>${nameData.variants.join(", ")}</p>
-            <h3>Personas Famosas</h3>
-            <ul>
-                ${nameData.famousPersons
-                  .map((person) => `<li>${person}</li>`)
-                  .join("")}
-            </ul>
+          <h3>Historia</h3>
+          <p>${nameData.history}</p>
+          <h3>Variantes</h3>
+          <p>${nameData.variants.join(", ")}</p>
+          <h3>Personas Famosas</h3>
+          <ul>
+            ${nameData.famousPersons
+              .map((person) => `<li>${person}</li>`)
+              .join("")}
+          </ul>
         </div>
-    `;
+      </div>
+      <button class="save-name-btn" onclick="saveName(${JSON.stringify(
+        nameData
+      ).replace(/"/g, "&quot;")})">
+        Guardar nombre
+      </button>
+    </div>
+  `;
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const isSaved = user.savedNames.includes(nameData.name);
-  saveButton.textContent = isSaved ? "Eliminar de favoritos" : "Guardar nombre";
-  saveButton.addEventListener("click", () =>
-    toggleSaveName(nameData.name, saveButton)
-  );
-
-  document.body.appendChild(modalElement);
+  document.body.appendChild(modal);
 
   // Close modal
-  const closeBtn = modalElement.querySelector(".close-modal");
-  closeBtn.onclick = () => modalElement.remove();
-  modalElement.onclick = (e) => {
-    if (e.target === modalElement) modalElement.remove();
+  const closeBtn = modal.querySelector(".close-modal");
+  closeBtn.onclick = () => modal.remove();
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
   };
 }
 
-// Toggle save/unsave name
-function toggleSaveName(name, button) {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const index = user.savedNames.indexOf(name);
+// Load user data
+async function loadUserData() {
+  try {
+    const [namesResponse, blogResponse] = await Promise.all([
+      fetch("/api/user/names", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }),
+      fetch("/api/user/blog", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }),
+    ]);
 
-  if (index === -1) {
-    user.savedNames.push(name);
-    button.textContent = "Eliminar de favoritos";
-    addActivity(`Guardado el nombre "${name}"`);
-  } else {
-    user.savedNames.splice(index, 1);
-    button.textContent = "Guardar nombre";
-    addActivity(`Eliminado el nombre "${name}" de favoritos`);
+    const [names, posts] = await Promise.all([
+      namesResponse.json(),
+      blogResponse.json(),
+    ]);
+
+    displaySavedNames(names);
+    displayBlogPosts(posts);
+  } catch (error) {
+    console.error("Error loading user data:", error);
   }
-
-  localStorage.setItem("user", JSON.stringify(user));
-  loadSavedNames();
 }
 
-// Load saved names
-function loadSavedNames() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const allNames = [...namesData.male, ...namesData.female];
-
-  savedNamesGrid.innerHTML = user.savedNames.length
-    ? user.savedNames
-        .map((name) => {
-          const nameData = allNames.find((n) => n.name === name);
-          return nameData
-            ? `
-            <div class="name-card" data-name="${nameData.name}">
-                <h3>${nameData.name}</h3>
-                <p>${nameData.meaning}</p>
-                <p class="origin">${nameData.origin}</p>
-                <button class="remove-name" data-name="${nameData.name}">
-                    Eliminar
-                </button>
-            </div>
-        `
-            : "";
-        })
+// Display saved names
+function displaySavedNames(names) {
+  const savedNamesGrid = document.getElementById("saved-names");
+  savedNamesGrid.innerHTML = names.length
+    ? names
+        .map(
+          (name) => `
+    <div class="name-card">
+      <h3>${name.name}</h3>
+      <p>${name.meaning}</p>
+      <p class="origin">${name.origin}</p>
+      <button class="remove-name" onclick="removeName('${name._id}')">
+        Eliminar
+      </button>
+    </div>
+  `
+        )
         .join("")
     : '<p class="no-names">No hay nombres guardados</p>';
-
-  // Add event listeners
-  document.querySelectorAll(".name-card").forEach((card) => {
-    card.addEventListener("click", () => showNameDetails(card.dataset.name));
-  });
 }
 
-// Load blog posts
-function loadBlogPosts() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  blogPosts.innerHTML = user.blogPosts?.length
-    ? user.blogPosts
+// Display blog posts
+function displayBlogPosts(posts) {
+  const blogPosts = document.getElementById("blog-posts");
+  blogPosts.innerHTML = posts.length
+    ? posts
         .map(
           (post) => `
-        <div class="blog-post">
-            <h3>${post.title}</h3>
-            <p class="post-meta">Por ${user.name} | ${new Date(
-            post.date
-          ).toLocaleDateString()}</p>
-            <p>${post.content}</p>
-        </div>
-    `
+    <div class="blog-post">
+      <h3>${post.title}</h3>
+      <p class="post-meta">Publicado el ${new Date(
+        post.date
+      ).toLocaleDateString()}</p>
+      <p>${post.content}</p>
+    </div>
+  `
         )
         .join("")
     : '<p class="no-posts">No hay posts publicados</p>';
 }
 
-// Show new post modal
-function showNewPostModal() {
-  const modal = blogModalTemplate.content.cloneNode(true);
-  const modalElement = modal.querySelector(".modal");
-  const form = modal.querySelector("form");
-
-  document.body.appendChild(modalElement);
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const title = form.querySelector("input").value;
-    const content = form.querySelector("textarea").value;
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user.blogPosts) user.blogPosts = [];
-
-    user.blogPosts.unshift({
-      title,
-      content,
-      date: new Date().toISOString(),
+// Save name
+async function saveName(nameData) {
+  try {
+    const response = await fetch("/api/user/names", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        name: nameData.name,
+        gender: nameData.gender || "unknown",
+        origin: nameData.origin,
+        meaning: nameData.meaning,
+      }),
     });
 
-    localStorage.setItem("user", JSON.stringify(user));
-    addActivity("Publicado nuevo post en el blog");
-    loadBlogPosts();
-    modalElement.remove();
-  });
-
-  // Close modal
-  const closeBtn = modalElement.querySelector(".close-modal");
-  closeBtn.onclick = () => modalElement.remove();
-  modalElement.onclick = (e) => {
-    if (e.target === modalElement) modalElement.remove();
-  };
+    const savedNames = await response.json();
+    displaySavedNames(savedNames);
+    alert("Nombre guardado exitosamente");
+  } catch (error) {
+    console.error("Error saving name:", error);
+    alert("Error al guardar el nombre");
+  }
 }
 
-// Add activity
-function addActivity(text) {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user.activities) user.activities = [];
+// Remove name
+async function removeName(nameId) {
+  try {
+    const response = await fetch(`/api/user/names/${nameId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-  user.activities.unshift({
-    text,
-    date: new Date().toISOString(),
+    const savedNames = await response.json();
+    displaySavedNames(savedNames);
+    alert("Nombre eliminado exitosamente");
+  } catch (error) {
+    console.error("Error removing name:", error);
+    alert("Error al eliminar el nombre");
+  }
+}
+
+// Create blog post
+async function createBlogPost(postData) {
+  try {
+    const response = await fetch("/api/user/blog", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(postData),
+    });
+
+    const posts = await response.json();
+    displayBlogPosts(posts);
+  } catch (error) {
+    console.error("Error creating post:", error);
+  }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+  // Navigation
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      navLinks.forEach((l) => l.classList.remove("active"));
+      link.classList.add("active");
+
+      const targetSection = link.id.replace("-tab", "-section");
+      sections.forEach((section) => {
+        section.classList.toggle("active", section.id === targetSection);
+      });
+    });
   });
 
-  user.activities = user.activities.slice(0, 10);
-  localStorage.setItem("user", JSON.stringify(user));
+  // Filters
+  [genderFilter, originFilter, lengthFilter, letterFilter].forEach((filter) => {
+    filter.addEventListener("change", filterNames);
+  });
 
-  const activityList = document.getElementById("activity-list");
-  if (activityList) {
-    activityList.innerHTML = user.activities
-      .map(
-        (activity) => `
-            <div class="activity-item">
-                <p>${activity.text}</p>
-                <span class="activity-date">${new Date(
-                  activity.date
-                ).toLocaleDateString()}</span>
-            </div>
-        `
-      )
-      .join("");
-  }
+  // Logout
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "../pages/login.html";
+  });
+
+  // New blog post
+  document.getElementById("new-post-btn")?.addEventListener("click", () => {
+    const title = prompt("Título del post:");
+    const content = prompt("Contenido del post:");
+    if (title && content) {
+      createBlogPost({ title, content });
+    }
+  });
 }
 
 // Initialize the page when DOM is loaded
